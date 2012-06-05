@@ -10,7 +10,7 @@ Python 2.6+
 Commands:
 ---------
 command: search / download / stream
-query: 'multiple keywords' / singlekeyword
+query: 'multiple keywords' / singlekeyword / u_author
 order: relevance, viewcount or rating
 number of results: 1 - 50
 timespan (optional): today, week, month, all

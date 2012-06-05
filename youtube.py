@@ -88,9 +88,12 @@ class YoutubeClient:
 	def execute(self):
 		
 		query = gdata.youtube.service.YouTubeVideoQuery()	
+		if self.q.startswith('u_'):
+			query.author = self.q[2:]
+		else:
+			query.vq = self.q
 		query.format = '5'
 		query.hd = True
-		query.vq = self.q
 		query.max_results = self.num
 		query.start_index = 1
 		query.racy = 'exclude'

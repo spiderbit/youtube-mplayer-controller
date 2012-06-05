@@ -21,7 +21,7 @@ class YoutubeClient:
 	
 
 	def __init__(self,keyword,q,order,num_results,shuffle=None,time=None):
-		
+
 		keywords = ['search', 'download', 'stream']
 		if keyword in keywords: self.keyword = keyword
 		else: sys.exit('invalid keyword')
@@ -29,7 +29,7 @@ class YoutubeClient:
 		self.q = q
 	
 		ordering_key = {'rating':'rating', 'viewcount':'viewCount','relevance':'relevance','published':'published'}
-		ordering = ['rating','viewcount','relevance']
+		ordering = ['rating','viewcount','relevance', 'published']
 		if order in ordering: self.order = ordering_key[order]
 		else: sys.exit('invalid ordering')
 		

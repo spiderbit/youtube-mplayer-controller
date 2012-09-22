@@ -16,7 +16,7 @@ information see the COPYING file or visit http://www.gnu.org/licenses/gpl-3.0.ht
 
 Requirements:
 --------------
-Smplayer
+SMPlayer
 Python 2.6+
 
 
@@ -40,14 +40,17 @@ Strg + q = quit
 
 Example usage:
 ---------------
-./youtube.py search 'ukf drum and bass' rating 20 shuffle
+./ytmpc search 'ukf drum and bass' rating 20 shuffle
 Returns 20 videos with query sorted by rating and shuffled
 
-./youtube.py download 'ukf drum and bass' viewcount 10 shuffle
+./ytmpc download 'ukf drum and bass' viewcount 10 shuffle
 Downloads 10 videos with query sorted by viewcount and shuffled
 
-./youtube.py stream 'ukf drum and bass' relevance 2 month
+./ytmpc stream 'ukf drum and bass' relevance 2 month
 Stream 2 videos with query sorted by relevance and uploaded between now and a month ago
+
+./ytmpc stream u_PsyStarcraft published 10
+Stream the 10 latest videos of the Channel from PsyStarcraft
 
 Enjoy!
 

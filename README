@@ -62,6 +62,8 @@ Stream all the latest videos FROM TODAY in reverse order from hdstarcrafts chann
 Outputs a playlist in the m3u format to the console
 hope that can be used for piping playlists to other players
 
+./ytmpc playlist 'ukf drum and bass' relevance 2 month > /tmp/ytmpc.m3u; totem /tmp/ytmpc.m3u
+Creates a temporary playlist and opens it with totem
 
 Enjoy!
 

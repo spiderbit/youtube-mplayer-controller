@@ -20,7 +20,7 @@ import gdata.youtube.service
 class YoutubeClient:
 	
 
-	def __init__(self,keyword,q,order,num_results,shuffle=None,time=None):
+	def __init__(self,keyword,q,order,num_results,mode=None,time=None):
 
 		keywords = ['search', 'download', 'stream']
 		if keyword in keywords: self.keyword = keyword
@@ -36,8 +36,9 @@ class YoutubeClient:
 		try: self.num = int(num_results)
 		except Exception as e: sys.exit('invalid number %s' %e)
 		
-		if shuffle is not None:	self.shuffle = shuffle
-		else: self.shuffle = False
+		if mode is not None:
+			self.mode = mode
+		else: self.mode = False
 
 		times_key = {'today':'today','week':'this_week','month':'this_month','time':'all_time'}
 		times = ['today', 'this_week', 'this_month', 'all_time']
@@ -112,7 +113,8 @@ class YoutubeClient:
 		query.orderby = self.order
 		if self.time: query.time = self.time
 		feed = self.client.YouTubeQuery(query)
-		if self.shuffle: random.shuffle(feed.entry)
+		if self.mode == 'shuffle': random.shuffle(feed.entry)
+		elif self.mode == 'reverse': feed.entry.reverse()
 		command = self.keyword
 		if command == 'download': self.download(feed)
 		if command == 'stream':	self.stream(feed)
@@ -123,6 +125,7 @@ if len(sys.argv) == 7:
 	YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
 if len(sys.argv) == 6:
 	if sys.argv[5] == 'shuffle': YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], None)
+	elif sys.argv[5] == 'reverse': YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], None)
 	else: YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], None, sys.argv[5])
 if len(sys.argv) == 5:
 	YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

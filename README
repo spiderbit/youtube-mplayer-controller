@@ -27,7 +27,7 @@ query: 'multiple keywords' / singlekeyword / u_author
 order: relevance, viewcount, published or rating
 number of results: 1 - 50
 timespan (optional): today, week, month, all
-shuffle (optional): shuffle
+mode (optional): shuffle, reverse
 
 
 Controls:
@@ -51,6 +51,9 @@ Stream 2 videos with query sorted by relevance and uploaded between now and a mo
 
 ./ytmpc stream u_PsyStarcraft published 10
 Stream the 10 latest videos of the Channel from PsyStarcraft
+
+./ytmpc stream u_hdstarcraft published 10 reverse
+Stream the 10 latest videos in revers order from hdstarcrafts channel
 
 Enjoy!
 

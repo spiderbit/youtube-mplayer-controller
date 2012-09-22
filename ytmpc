@@ -18,24 +18,24 @@ import gdata.youtube.service
 
 
 class YoutubeClient:
-	
+
 
 	def __init__(self,keyword,q,order,num_results,mode=None,time=None):
 
-		keywords = ['search', 'download', 'stream']
+		keywords = ['search', 'download', 'stream', 'playlist']
 		if keyword in keywords: self.keyword = keyword
 		else: sys.exit('invalid keyword')
-		
+
 		self.q = q
-	
+
 		ordering_key = {'rating':'rating', 'viewcount':'viewCount','relevance':'relevance','published':'published'}
 		ordering = ['rating','viewcount','relevance', 'published']
 		if order in ordering: self.order = ordering_key[order]
 		else: sys.exit('invalid ordering')
-		
+
 		try: self.num = int(num_results)
 		except Exception as e: sys.exit('invalid number %s' %e)
-		
+
 		if mode is not None:
 			self.mode = mode
 		else: self.mode = False
@@ -49,33 +49,7 @@ class YoutubeClient:
 		self.execute()
 
 
-	def search(self,feed):
-
-		for entry in feed.entry:
-			try:
-				print '\n[video] title: %s' % entry.title.text
-				print '[video] url: %s' % entry.media.player.url
-				print '[video] rating: %s' % entry.rating.average
-				print '[video] view count: %s' % entry.statistics.view_count
-				print '[video] id: %s' % entry.media.player.url.split('watch?v=').pop().split("&")[0]
-			except Exception as e: 
-				print('search failed:\nError: %s' % e)
-
-
-	def download(self,feed):
-		
-		for entry in feed.entry:
-			try:
-				ytdl.main(entry.media.player.url)
-			except Exception as e:
-				print('download failed:\nError: %s' % e)
-
-
-	def stream(self,feed):
-		
-		import subprocess
-		#subprocess.Popen(["smplayer"])
-		#subprocess.Popen(["umplayer"])
+	def generate_playlist(self,feed):
 		urls = []
 		lines = []
 		lines.append('#EXTM3U\n')
@@ -85,22 +59,59 @@ class YoutubeClient:
 			urls.append(url)
 			lines.append('#EXTINF:0,%s\n%s\n'%(entry.title.text,url))
 			#subprocess.Popen(["smplayer", "-add-to-playlist", entry.media.player.url])
+		lines.append(urls[0])
+		return lines
+
+
+	def playlist(self,feed):
+		lines = self.generate_playlist(feed)
+		for line in lines:
+			print line
+
+
+	def search(self,feed):
+
+		for entry in feed.entry:
+			try:
+				print '\n[video] title: %s' % entry.title.text
+				print '[video] url: %s' % entry.media.player.url
+				print '[video] rating: %s' % entry.rating.average
+				print '[video] view count: %s' % entry.statistics.view_count
+				print '[video] id: %s' % entry.media.player.url.split('watch?v=').pop().split("&")[0]
+			except Exception as e:
+				print('search failed:\nError: %s' % e)
+
+
+	def download(self,feed):
+
+		for entry in feed.entry:
+			try:
+				ytdl.main(entry.media.player.url)
+			except Exception as e:
+				print('download failed:\nError: %s' % e)
+
+
+	def stream(self,feed):
+
+		import subprocess
+		#subprocess.Popen(["smplayer"])
+		#subprocess.Popen(["umplayer"])
 
 		import tempfile
 		d = tempfile.mkdtemp()
 		import os
 		f = open(os.path.join(d,'test.m3u'), 'w+')
-		lines.append(urls[0])
+		lines = self.generate_playlist(feed)
 		f.writelines(lines)
 		f.close()
 		subprocess.check_call(["smplayer", f.name])
 		import shutil
 		shutil.rmtree(d)
-		
+
 
 	def execute(self):
-		
-		query = gdata.youtube.service.YouTubeVideoQuery()	
+
+		query = gdata.youtube.service.YouTubeVideoQuery()
 		if self.q.startswith('u_'):
 			query.author = self.q[2:]
 		else:
@@ -120,6 +131,7 @@ class YoutubeClient:
 		if command == 'download': self.download(feed)
 		if command == 'stream':	self.stream(feed)
 		if command == 'search':	self.search(feed)
+		if command == 'playlist':	self.playlist(feed)
 
 
 if len(sys.argv) == 7:

@@ -41,7 +41,7 @@ class YoutubeClient:
 		else: self.mode = False
 
 		times_key = {'today':'today','week':'this_week','month':'this_month','time':'all_time'}
-		times = ['today', 'this_week', 'this_month', 'all_time']
+		times = ['today', 'week', 'month', 'time']
 		if time is not None and time in times: self.time = times_key[time]
 		else: self.time = False
 

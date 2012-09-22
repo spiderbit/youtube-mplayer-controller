@@ -92,7 +92,9 @@ class YoutubeClient:
 
 
 	def stream(self,feed):
-
+		if len(feed.entry) == 0:
+			print "search had 0 results, widen your search terms"
+			return
 		import subprocess
 		#subprocess.Popen(["smplayer"])
 		#subprocess.Popen(["umplayer"])

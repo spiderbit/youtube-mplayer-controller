@@ -107,7 +107,8 @@ class YoutubeClient:
 			query.vq = self.q
 		query.format = '5'
 		query.hd = True
-		query.max_results = self.num
+		if self.num != -1:
+			query.max_results = self.num
 		query.start_index = 1
 		query.racy = 'exclude'
 		query.orderby = self.order

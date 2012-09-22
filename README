@@ -25,7 +25,7 @@ Commands:
 command: search / download / stream
 query: 'multiple keywords' / singlekeyword / u_author
 order: relevance, viewcount, published or rating
-number of results: 1 - 50
+number of results: 1 - 50  |  -1 for all
 timespan (optional): today, week, month, all
 mode (optional): shuffle, reverse
 
@@ -53,7 +53,10 @@ Stream 2 videos with query sorted by relevance and uploaded between now and a mo
 Stream the 10 latest videos of the Channel from PsyStarcraft
 
 ./ytmpc stream u_hdstarcraft published 10 reverse
-Stream the 10 latest videos in revers order from hdstarcrafts channel
+Stream the 10 latest videos in reverse order from hdstarcrafts channel
+
+./ytmpc stream u_hdstarcraft published -1 today reverse
+Stream all the latest videos FROM TODAY in reverse order from hdstarcrafts channel
 
 Enjoy!
 

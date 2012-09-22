@@ -1,9 +1,22 @@
-This is a youtube client for the command line that supports searching downloading and streaming youtube video's from the command line.
+=====
+ytmpc
+=====
+
+(youtube mplayer controller) * just a temporary name
+
+ytmpc is a tool for the command line that creates playlists to play with mplayer.
+
+License
+=======
+
+ytmpc is free software and licensed under the GNU GPLv3 or later. You
+are welcome to change and redistribute it under certain conditions. For more
+information see the COPYING file or visit http://www.gnu.org/licenses/gpl-3.0.html
 
 
 Requirements:
 --------------
-VLC media player
+Smplayer
 Python 2.6+
 
 
@@ -19,11 +32,10 @@ shuffle (optional): shuffle
 
 Controls:
 ---------
-[ or { = prev
-] or } = next
-p or P = pause
-r or R = reset
-q or Q = quit
+p = prev
+n = next
+SPACE = pause
+Strg + q = quit
 
 
 Example usage:
@@ -37,7 +49,6 @@ Downloads 10 videos with query sorted by viewcount and shuffled
 ./youtube.py stream 'ukf drum and bass' relevance 2 month
 Stream 2 videos with query sorted by relevance and uploaded between now and a month ago
 
-
 Enjoy!
 
-0xPr0xy
+Spiderbit

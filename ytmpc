@@ -5,15 +5,15 @@
 import sys
 import random
 
-from youtube_player import YoutubePlayer
+# from youtube_player import YoutubePlayer
 # my player, uses urwid and vlc ^^
 
 import gdata.youtube.service
 # http://gdata-python-client.googlecode.com/hg/pydocs/gdata.youtube.service.html#YouTubeVideoQuery
 # https://developers.google.com/youtube/1.0/developers_guide_python
 
-from ytdl import ytdl
-from ytstr import ytstr
+#from ytdl import ytdl
+#from ytstr import ytstr
 # https://bitbucket.org/rg3/youtube-dl/wiki/Home
 
 
@@ -72,18 +72,30 @@ class YoutubeClient:
 
 	def stream(self,feed):
 		
+		import subprocess
+		#subprocess.Popen(["smplayer"])
+		#subprocess.Popen(["umplayer"])
 		urls = []
+		lines = []
+		lines.append('#EXTM3U\n')
+		lines.append("# Playlist created by youtube_mplayer_controller\n")
 		for entry in feed.entry:
-			try:
-				ytstr.main(entry.media.player.url)
-			except ytstr.ReturnUrl as url:
-				print '[youtube] Found location for video %s' %entry.title.text
-				print '[youtube] URL: %s' %url
-				urls.append(str(url))
-			except Exception as e:
-				print('download failed:\nError: %s' % e)
-		player = YoutubePlayer(urls)
+			url = str(entry.media.player.url)
+			urls.append(url)
+			lines.append('#EXTINF:0,%s\n%s\n'%(entry.title.text,url))
+			#subprocess.Popen(["smplayer", "-add-to-playlist", entry.media.player.url])
 
+		import tempfile
+		d = tempfile.mkdtemp()
+		import os
+		f = open(os.path.join(d,'test.m3u'), 'w+')
+		lines.append(urls[0])
+		f.writelines(lines)
+		f.close()
+		subprocess.check_call(["smplayer", f.name])
+		import shutil
+		shutil.rmtree(d)
+		
 
 	def execute(self):
 		

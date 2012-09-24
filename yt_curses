@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+
+import subprocess
+from os import system
+import curses
+
+
+
+screen = curses.initscr()
+x = 0
+
+channels = ["Huskystarcraft", "HDStarcraft"]
+terms = ["basic income grant", "XDC2012"]
+time_frames = {'t' : "today",'w' : "week",'m' : "month"}
+selected_time = 't'
+time_keys = ['t','w','m']
+while x != ord('q'):
+
+	screen.clear()
+	screen.border(0)
+
+	l_colomnx = 4
+	r_colomnx = 40
+
+        screen.addstr(1, l_colomnx, "========TIME SPAN========")
+	
+	for k in time_keys:
+		if k == selected_time:
+			t_string = "<%s>"%time_frames[k]
+		else:
+			t_string = " %s "%time_frames[k]
+		pos_time = time_keys.index(k) * 20 + l_colomnx
+		screen.addstr(2, pos_time, "[%s] %s" % (k, t_string))
+	screen.addstr(4, l_colomnx, "========CHANNELS========")
+	for i in range(len(channels)):
+		screen.addstr(5+i, l_colomnx, "- [%s] %s" % (i, channels[i]))
+	screen.addstr(4, r_colomnx, "============SEARCH TERMS============")
+	for i in range(len(terms)):
+		screen.addstr(5+i, r_colomnx, "- [%s] %s" % (i+len(channels), terms[i]))
+	screen.addstr(10, l_colomnx, "- [q] Quit")
+	screen.addstr(12, l_colomnx, "What do you want to do? ")
+	
+	screen.refresh()	
+	x = screen.getch()
+	if chr(x) in time_frames:
+		selected_time = chr(x)
+	elif chr(x) == 'q':
+		pass
+	else:
+		if int(chr(x)) < len(channels):
+			channel = channels[int(chr(x))]
+			subprocess.check_call(["ytmpc", 'stream', 'u_%s'%channel, 'published', '-1', 'reverse', time_frames[selected_time]])
+		else:
+			term = terms[int(chr(x)) - len(channels)]
+			subprocess.check_call(["ytmpc", 'stream', term, 'published', '-1', 'reverse', time_frames[selected_time]])
+
+	
+curses.endwin()

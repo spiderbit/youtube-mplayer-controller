@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+
+import subprocess
+
+x = None
+
+channels = ["Huskystarcraft", "HDStarcraft"]
+terms = ["basic income grant", "XDC2012"]
+
+while x != "q":
+	print ("\n========\nCHANNELS\n========\n")
+	for i in range(len(channels)):
+		print "- [%s] %s" % (i, channels[i])
+	print ("\n============\nSEARCH TERMS\n============\n")
+	for i in range(len(terms)):
+		print "- [%s] %s" % (i+len(channels), terms[i])
+	print "- [q] Quit"
+	print "\nWhat Stream do you want?"
+	x = raw_input()
+	if x == "q":
+		print "quit"
+	else:
+		if int(x) < len(channels):
+			channel = channels[int(x)]
+			subprocess.check_call(["ytmpc", 'stream', 'u_%s'%channel, 'published', '-1', 'reverse', 'week'])
+		else:
+			term = terms[int(x) - len(channels)]
+			subprocess.check_call(["ytmpc", 'stream', term, 'published', '-1', 'reverse', 'week'])
+	
+	

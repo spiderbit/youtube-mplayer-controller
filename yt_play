@@ -7,8 +7,15 @@ x = None
 
 channels = ["Huskystarcraft", "HDStarcraft"]
 terms = ["basic income grant", "XDC2012"]
+time_frames = {'t' : "today",'w' : "week",'m' : "month"}
+selected_time = 't'
 
 while x != "q":
+        print ("\n============\nTIME\n============\n")
+	for k in ['t','w','m']:
+		if k == selected_time: marker = "*"
+		else: marker = " "
+		print "- (%s)[%s] %s" % (marker, k, time_frames[k])
 	print ("\n========\nCHANNELS\n========\n")
 	for i in range(len(channels)):
 		print "- [%s] %s" % (i, channels[i])
@@ -20,12 +27,14 @@ while x != "q":
 	x = raw_input()
 	if x == "q":
 		print "quit"
+	elif x in time_frames:
+		selected_time = x
 	else:
 		if int(x) < len(channels):
 			channel = channels[int(x)]
-			subprocess.check_call(["ytmpc", 'stream', 'u_%s'%channel, 'published', '-1', 'reverse', 'week'])
+			subprocess.check_call(["ytmpc", 'stream', 'u_%s'%channel, 'published', '-1', 'reverse', time_frames[selected_time]])
 		else:
 			term = terms[int(x) - len(channels)]
-			subprocess.check_call(["ytmpc", 'stream', term, 'published', '-1', 'reverse', 'week'])
+			subprocess.check_call(["ytmpc", 'stream', term, 'published', '-1', 'reverse', time_frames[selected_time]])
 	
 	

@@ -146,6 +146,7 @@ def start():
 			if search != "":
 				subprocess.check_output(["ytmpc", 'stream', search, 'published', \
 											 '-1', 'reverse', time_frames[selected_time]])
+			search = ""
 
 	curses.endwin()
 

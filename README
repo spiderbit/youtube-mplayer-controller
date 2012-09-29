@@ -18,7 +18,35 @@ Requirements:
 --------------
 SMPlayer
 Python 2.6+
+python-elixir
+python-sqlite
+python-configobj
 
+yt_curses
+---------
+
+The main tool now is yt_curses (a curses-wrapper around of ytmpc)
+
+Its inspired by minitube, but has a quick console curces gui, it starts the videos from the oldest to the newest in the choosen time-span. So you dont have to rearange a playlist like in minitube to get multipart videos run in the right direction. Additionaly another point why I wrote it, if not the most important one, is that it uses mplayer instead of gstreamer. On machines like some of mine (amd zacate) that makes 1 to 1.5 cores busy if you watch it in 720p, and browsing and other multitasking tasks slow down badly. with ytmpc/mplayer it only keeps here 0.5-0.7 cores buys.
+
+if you like it and want to give me suggestions what I should make better or anything else feel free to write me a email to s.huchler@gmail.com
+
+yust start it with:
+
+> ./yt_curses
+
+its pretty much self explainible, just press the buttons, start with select if you want to add a youtube channel or normal search, with the buttons c for channel or s for search and press a for adding/starting your search.
+
+INSTALL
+
+Copy or link yt_curses AND ytmpc to a directory which is in your path
+
+------------------------------------------------------------------------
+
+ytmpc
+-----
+
+The rest of the helpfile is to show you how you can use the ytmpc programm directly, its less user-friendly but has yet some more features, like downloading your selection. or a shuffle mode:
 
 Commands:
 ---------

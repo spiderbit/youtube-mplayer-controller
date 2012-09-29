@@ -4,7 +4,9 @@
 import subprocess
 from os import system
 import curses
-
+from configobj import ConfigObj
+import os
+import user
 
 def define_block(screen,name="unnamed", lines={'1':'x'}, \
 					 x_offset=0, y_offset=0, selected=None, align='h'):
@@ -30,46 +32,121 @@ def define_block(screen,name="unnamed", lines={'1':'x'}, \
 			x_pos += len(output) + distance
 
 
+def get_choice_dict(choices, start=1):
+	"""Returns a dict with numbers pointing to the choices
+
+	Arguments:
+	- `choices`: which choices you have
+	- `start`: which index to start with
+	"""
+	choice_map = {}
+
+	max_hits_visible = 5
+	for choice in choices:
+		if choices.index(choice) < max_hits_visible:
+			choice_map[choices.index(choice)+start] = choice
+
+	return choice_map
+
+def ask_search_string(screen, edit_list):
+	"""Asks a the user to input a string and adds it to the list
+
+	Arguments:
+	- `screen`: ncurses screen element
+	- `edit_list`: list to add the input
+	"""
+
+	screen.addstr(20, 10, "SEARCH STRING: ")
+	screen.refresh()
+	search = screen.getstr()
+	if search in edit_list:
+		edit_list.remove(search)
+	edit_list.insert(0, search)
+	return edit_list
+
+
+
 def start():
 	"""starts the curses ui
 	"""
 
-	screen = curses.initscr()
-	x = 0
-	channels = {1:"Huskystarcraft", 2:"HDStarcraft"}
-	terms = {3:"basic income grant", 4:"XDC2012"}
-	time_frames = {'t' : "today",'w' : "week",'m' : "month"}
-	selected_time = 't'
+	app_name = 'ytmpc'
+	config_path = os.path.join(user.home, '.config', app_name)
+	if not os.access(config_path, os.F_OK):
+		os.mkdir(config_path)
+	config = ConfigObj()
 
-	while x != ord('q'):
+	config.filename = os.path.join(config_path, 'config')
+	if not os.access(os.path.join(config_path, 'config'), os.F_OK):
+#		config.validate(vdt, copy=True)
+		config['history']={}
+		config['history']['channels'] = []
+		config['history']['terms'] = []
+		config.write()
+	else:
+		config = ConfigObj(os.path.join(config_path, 'config'))
+#		self.config.validate(vdt)
+
+	channels_lst = config['history']['channels']
+	terms_lst = config['history']['terms']
+
+	channels = get_choice_dict(channels_lst)
+	terms = get_choice_dict(terms_lst)
+	time_frames = {'t' : "today",'w' : "week",'m' : "month"}
+	modes  = {'c' : "channel",'s' : "search"}
+	selected_time = 't'
+	selected_mode = 's'
+	x_offset_left = 4
+	x_offset_2 = 40
+	x = 0
+	screen = curses.initscr()
+	search = ""
+
+	while x != 'q':
 		screen.clear()
 		screen.border(0)
 
-		x_offset_left = 4
-		x_offset_2 = 40
+		define_block(screen, "Time span", time_frames, x_offset_left, 1, selected_time, 'v')
+		define_block(screen, "Stream type", modes, x_offset_left, 3, selected_mode, 'v')
+		define_block(screen, "Channels", channels, x_offset_left, 6)
+		define_block(screen, "Search terms", terms, x_offset_2, 6)
 
-		define_block(screen, "time span", time_frames, x_offset_left, 1, selected_time, 'v')
-		define_block(screen, "channels", channels, x_offset_left, 5)
-		define_block(screen, "search terms", terms, x_offset_2, 5)
-
-		screen.addstr(10, x_offset_left, "- [q] Quit")
-		screen.addstr(12, x_offset_left, "What do you want to do? ")
+		screen.addstr(14, x_offset_left, "- [q] Quit")
+		screen.addstr(15, x_offset_left, "- [n] New Search/Channel")
+		screen.addstr(17, x_offset_left, "What do you want to do? ")
 
 		screen.refresh()
-		x = screen.getch()
-		if chr(x) in time_frames.keys():
-			selected_time = chr(x)
-		elif chr(x) == 'q':
-			break
+		x = screen.getkey()
+
+		if x in time_frames.keys():
+			selected_time = x
+		elif x == 'q':
+			config.write()
 		else:
-			if int(chr(x)) in channels.keys():
-				channel = channels[int(chr(x))]
+			if x == 'n':
+				if selected_mode == 'c':
+					channels_lst = ask_search_string(screen, channels_lst)
+					channels = get_choice_dict(channels_lst, 1)
+					search = 'u_%s'%channels_lst[0]
+				elif selected_mode == 's':
+					terms_lst = ask_search_string(screen, terms_lst)
+					terms = get_choice_dict(terms_lst, 1)
+					search = terms_lst[0]
+			elif x == 'c':
+				selected_mode ='c'
+			elif x == 's':
+				selected_mode ='s'
+			elif selected_mode == 'c' and x.isdigit() and int(x) in channels.keys():
+				channel = channels[int(x)]
 				search = 'u_%s'%channel
-			else:
-				search = terms[int(chr(x))]
-			subprocess.check_output(["ytmpc", 'stream', search, 'published', \
-								 '-1', 'reverse', time_frames[selected_time]])
+			elif selected_mode == 's' and x.isdigit() and int(x) in terms.keys():
+				search = terms[int(x)]
+			else: search = ""
 			screen.refresh()
+			if search != "":
+				subprocess.check_output(["ytmpc", 'stream', search, 'published', \
+											 '-1', 'reverse', time_frames[selected_time]])
+
 	curses.endwin()
 
 start()

@@ -41,7 +41,7 @@ def get_choice_dict(choices, start=1):
 	"""
 	choice_map = {}
 
-	max_hits_visible = 5
+	max_hits_visible = 9
 	for choice in choices:
 		if choices.index(choice) < max_hits_visible:
 			choice_map[choices.index(choice)+start] = choice
@@ -55,8 +55,8 @@ def ask_search_string(screen, edit_list):
 	- `screen`: ncurses screen element
 	- `edit_list`: list to add the input
 	"""
-
-	screen.addstr(20, 10, "SEARCH STRING: ")
+	cur_y, cur_x = screen.getmaxyx()
+	screen.addstr(cur_y-3, 15, "SEARCH STRING: ")
 	screen.refresh()
 	search = screen.getstr()
 	if search in edit_list:
@@ -120,9 +120,10 @@ class YTCurses(object):
 		define_block(screen, "Channels", self.channels, self.x_offset_left, 6)
 		define_block(screen, "Search terms", self.terms, self.x_offset_2, 6)
 
-		screen.addstr(14, self.x_offset_left, "- [q] Quit")
-		screen.addstr(15, self.x_offset_left, "- [n] New Search/Channel")
-		screen.addstr(17, self.x_offset_left, "What do you want to do? ")
+		cur_y, cur_x = screen.getmaxyx()
+		screen.addstr(cur_y-8, self.x_offset_left, "- [q] Quit")
+		screen.addstr(cur_y-7, self.x_offset_left, "- [n] New Search/Channel")
+		screen.addstr(cur_y-6, self.x_offset_left, "What do you want to do? ")
 
 		screen.refresh()
 

@@ -65,89 +65,132 @@ def ask_search_string(screen, edit_list):
 	return edit_list
 
 
+class YTCurses(object):
+	"""Courses youtube client
+	"""
+
+	def __init__(self, screen):
+		"""
+
+		Arguments:
+		- `screen`:
+		"""
+		self._screen = screen
+		app_name = 'ytmpc'
+		config_path = os.path.join(user.home, '.config', app_name)
+		if not os.access(config_path, os.F_OK):
+			os.mkdir(config_path)
+		config = ConfigObj()
+		config.filename = os.path.join(config_path, 'config')
+		if not os.access(os.path.join(config_path, 'config'), os.F_OK):
+			config['history']={}
+			config['history']['channels'] = []
+			config['history']['terms'] = []
+			config.write()
+		else:
+			config = ConfigObj(os.path.join(config_path, 'config'))
+			self.channels_lst = config['history']['channels']
+			self.terms_lst = config['history']['terms']
+
+		self.channels = get_choice_dict(self.channels_lst)
+		self.terms = get_choice_dict(self.terms_lst)
+		self.time_frames = {'t' : "today",'w' : "week",'m' : "month"}
+		self.modes  = {'c' : "channel",'s' : "search"}
+		self.selected_time = 't'
+		self.selected_mode = 's'
+		self.x_offset_left = 4
+		self.x_offset_2 = 40
+		self.config = config
+
+
+
+	def show_client(self, x):
+
+		config = self.config
+		search = ""
+		screen = self._screen
+		screen.refresh()
+
+		screen.border(0)
+
+		define_block(screen, "Time span", self.time_frames, \
+					 self.x_offset_left, 1, self.selected_time, 'v')
+		define_block(screen, "Stream type", self.modes, \
+					 self.x_offset_left, 3, self.selected_mode, 'v')
+		define_block(screen, "Channels", self.channels, self.x_offset_left, 6)
+		define_block(screen, "Search terms", self.terms, self.x_offset_2, 6)
+
+		screen.addstr(14, self.x_offset_left, "- [q] Quit")
+		screen.addstr(15, self.x_offset_left, "- [n] New Search/Channel")
+		screen.addstr(17, self.x_offset_left, "What do you want to do? ")
+
+		screen.refresh()
+
+
+		try:
+			x = screen.getkey()
+		except Exception:
+			return
+
+		if x in self.time_frames.keys():
+			self.selected_time = x
+		elif x == 'q':
+			config.write()
+		else:
+			if x == 'n':
+				if self.selected_mode == 'c':
+					self.channels_lst = ask_search_string(screen, self.channels_lst)
+					self.channels = get_choice_dict(self.channels_lst, 1)
+					search = 'u_%s'%self.channels_lst[0]
+				elif self.selected_mode == 's':
+					self.terms_lst = ask_search_string(screen, self.terms_lst)
+					self.terms = get_choice_dict(self.terms_lst, 1)
+					search = self.terms_lst[0]
+			elif x == 'c':
+				self.selected_mode ='c'
+			elif x == 's':
+				self.selected_mode ='s'
+			elif self.selected_mode == 'c' and x.isdigit() \
+				 and int(x) in self.channels.keys():
+				channel = self.channels[int(x)]
+				search = 'u_%s'%channel
+			elif self.selected_mode == 's' and x.isdigit() \
+				 and int(x) in self.terms.keys():
+				search = self.terms[int(x)]
+			else: search = ""
+			screen.refresh()
+			if search != "":
+				subprocess.check_output(["ytmpc", 'stream', search, 'published', \
+										 '-1', 'reverse', \
+										 self.time_frames[self.selected_time]])
+				search = ""
+		return x
+
 
 def start():
 	"""starts the curses ui
 	"""
 
-	app_name = 'ytmpc'
-	config_path = os.path.join(user.home, '.config', app_name)
-	if not os.access(config_path, os.F_OK):
-		os.mkdir(config_path)
-	config = ConfigObj()
-
-	config.filename = os.path.join(config_path, 'config')
-	if not os.access(os.path.join(config_path, 'config'), os.F_OK):
-#		config.validate(vdt, copy=True)
-		config['history']={}
-		config['history']['channels'] = []
-		config['history']['terms'] = []
-		config.write()
-	else:
-		config = ConfigObj(os.path.join(config_path, 'config'))
-#		self.config.validate(vdt)
-
-	channels_lst = config['history']['channels']
-	terms_lst = config['history']['terms']
-
-	channels = get_choice_dict(channels_lst)
-	terms = get_choice_dict(terms_lst)
-	time_frames = {'t' : "today",'w' : "week",'m' : "month"}
-	modes  = {'c' : "channel",'s' : "search"}
-	selected_time = 't'
-	selected_mode = 's'
-	x_offset_left = 4
-	x_offset_2 = 40
 	x = 0
+
+	min_y=25
+	min_x=60
 	screen = curses.initscr()
-	search = ""
+	ytc = YTCurses(screen)
 
 	while x != 'q':
 		screen.clear()
-		screen.border(0)
+		cur_y, cur_x = screen.getmaxyx()
 
-		define_block(screen, "Time span", time_frames, x_offset_left, 1, selected_time, 'v')
-		define_block(screen, "Stream type", modes, x_offset_left, 3, selected_mode, 'v')
-		define_block(screen, "Channels", channels, x_offset_left, 6)
-		define_block(screen, "Search terms", terms, x_offset_2, 6)
-
-		screen.addstr(14, x_offset_left, "- [q] Quit")
-		screen.addstr(15, x_offset_left, "- [n] New Search/Channel")
-		screen.addstr(17, x_offset_left, "What do you want to do? ")
-
-		screen.refresh()
-		x = screen.getkey()
-
-		if x in time_frames.keys():
-			selected_time = x
-		elif x == 'q':
-			config.write()
-		else:
-			if x == 'n':
-				if selected_mode == 'c':
-					channels_lst = ask_search_string(screen, channels_lst)
-					channels = get_choice_dict(channels_lst, 1)
-					search = 'u_%s'%channels_lst[0]
-				elif selected_mode == 's':
-					terms_lst = ask_search_string(screen, terms_lst)
-					terms = get_choice_dict(terms_lst, 1)
-					search = terms_lst[0]
-			elif x == 'c':
-				selected_mode ='c'
-			elif x == 's':
-				selected_mode ='s'
-			elif selected_mode == 'c' and x.isdigit() and int(x) in channels.keys():
-				channel = channels[int(x)]
-				search = 'u_%s'%channel
-			elif selected_mode == 's' and x.isdigit() and int(x) in terms.keys():
-				search = terms[int(x)]
-			else: search = ""
+		if cur_x < min_x or cur_y < min_y:
+			screen.addstr(1, 1, \
+						  "Error: console is to small!")
 			screen.refresh()
-			if search != "":
-				subprocess.check_output(["ytmpc", 'stream', search, 'published', \
-											 '-1', 'reverse', time_frames[selected_time]])
-			search = ""
-
+		else:
+			x = ytc.show_client(x)
+			#screen.addstr(1, 1, "%s %s"%(cur_x,cur_y))
+			screen.refresh()
 	curses.endwin()
 
-start()
+if __name__ == '__main__':
+	start()

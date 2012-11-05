@@ -76,43 +76,55 @@ class YTCurses(object):
 		- `screen`:
 		"""
 		self._screen = screen
-		app_name = 'ytmpc'
-		config_path = os.path.join(user.home, '.config', app_name)
-		if not os.access(config_path, os.F_OK):
-			os.mkdir(config_path)
-		config = ConfigObj()
-		config.filename = os.path.join(config_path, 'config')
-		if not os.access(os.path.join(config_path, 'config'), os.F_OK):
-			config['history']={}
-			config['history']['channels'] = []
-			config['history']['terms'] = []
-			config.write()
-		else:
-			config = ConfigObj(os.path.join(config_path, 'config'))
-			self.channels_lst = config['history']['channels']
-			self.terms_lst = config['history']['terms']
-
-		self.channels = get_choice_dict(self.channels_lst)
-		self.terms = get_choice_dict(self.terms_lst)
+		self.channels_lst = []
+		self.terms_lst = []
+		self.read_settings()
 		self.time_frames = {'t' : "today",'w' : "week",'m' : "month"}
 		self.modes  = {'c' : "channel",'s' : "search"}
 		self.selected_time = 't'
 		self.selected_mode = 's'
 		self.x_offset_left = 4
 		self.x_offset_2 = 40
-		self.config = config
 
 
+	def read_settings(self):
+		"""Reads settings from config file or create one with default settings
+		"""
+		app_name = 'ytmpc'
+		config_path = os.path.join(user.home, '.config', app_name)
+		if not os.access(config_path, os.F_OK):
+			os.mkdir(config_path)
+		config = ConfigObj()
+		config.filename = os.path.join(config_path, 'config')
+
+		if not os.access(os.path.join(config_path, 'config'), os.F_OK):
+			self.write_settings()
+		else:
+			config = ConfigObj(os.path.join(config_path, 'config'))
+			self.channels_lst = config['history']['channels']
+			self.terms_lst = config['history']['terms']
+
+	def write_settings(self):
+		"""Writes search history to config file
+		"""
+		app_name = 'ytmpc'
+		config_path = os.path.join(user.home, '.config', app_name)
+		config = ConfigObj()
+		config.filename = os.path.join(config_path, 'config')
+		config['history']={}
+		config['history']['channels'] = self.channels_lst
+		config['history']['terms'] = self.terms_lst
+		config.write()
 
 	def show_client(self, x):
 
-		config = self.config
 		search = ""
 		screen = self._screen
 		screen.refresh()
-
 		screen.border(0)
 
+		self.channels = get_choice_dict(self.channels_lst)
+		self.terms = get_choice_dict(self.terms_lst)
 		define_block(screen, "Time span", self.time_frames, \
 					 self.x_offset_left, 1, self.selected_time, 'v')
 		define_block(screen, "Stream type", self.modes, \
@@ -127,44 +139,46 @@ class YTCurses(object):
 
 		screen.refresh()
 
-
 		try:
 			x = screen.getkey()
 		except Exception:
 			return
-
 		if x in self.time_frames.keys():
 			self.selected_time = x
-		elif x == 'q':
-			config.write()
-		else:
-			if x == 'n':
-				if self.selected_mode == 'c':
-					self.channels_lst = ask_search_string(screen, self.channels_lst)
-					self.channels = get_choice_dict(self.channels_lst, 1)
-					search = 'u_%s'%self.channels_lst[0]
-				elif self.selected_mode == 's':
-					self.terms_lst = ask_search_string(screen, self.terms_lst)
-					self.terms = get_choice_dict(self.terms_lst, 1)
-					search = self.terms_lst[0]
-			elif x == 'c':
-				self.selected_mode ='c'
-			elif x == 's':
-				self.selected_mode ='s'
-			elif self.selected_mode == 'c' and x.isdigit() \
-				 and int(x) in self.channels.keys():
-				channel = self.channels[int(x)]
-				search = 'u_%s'%channel
-			elif self.selected_mode == 's' and x.isdigit() \
-				 and int(x) in self.terms.keys():
-				search = self.terms[int(x)]
-			else: search = ""
-			screen.refresh()
-			if search != "":
-				subprocess.check_output(["ytmpc", 'stream', search, 'published', \
-										 '-1', 'reverse', \
-										 self.time_frames[self.selected_time]])
-				search = ""
+			search = ""
+		elif x == 'n':
+			if self.selected_mode == 'c':
+				self.channels_lst = ask_search_string(screen, self.channels_lst)
+				self.channels = get_choice_dict(self.channels_lst, 1)
+				search = 'u_%s'%self.channels_lst[0]
+			elif self.selected_mode == 's':
+				self.terms_lst = ask_search_string(screen, self.terms_lst)
+				self.terms = get_choice_dict(self.terms_lst, 1)
+				search = self.terms_lst[0]
+		elif x == 'c':
+			self.selected_mode ='c'
+		elif x == 's':
+			self.selected_mode ='s'
+		elif self.selected_mode == 'c' and x.isdigit() \
+			 and int(x) in self.channels.keys():
+			channel = self.channels[int(x)]
+			search = 'u_%s'%channel
+			self.channels_lst.remove(channel)
+			self.channels_lst.insert(0,channel)
+		elif self.selected_mode == 's' and x.isdigit() \
+			 and int(x) in self.terms.keys():
+			search = self.terms[int(x)]
+			self.terms_lst.remove(search)
+			self.terms_lst.insert(0,search)
+		else: search = ""
+		screen.refresh()
+		if search != "":
+			subprocess.check_output(["ytmpc", 'stream', search, 'published', \
+									 '-1', 'reverse', \
+									 self.time_frames[self.selected_time]])
+			search = ""
+			self.write_settings()
+
 		return x
 
 
@@ -189,7 +203,6 @@ def start():
 			screen.refresh()
 		else:
 			x = ytc.show_client(x)
-			#screen.addstr(1, 1, "%s %s"%(cur_x,cur_y))
 			screen.refresh()
 	curses.endwin()
 

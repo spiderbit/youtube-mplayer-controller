@@ -1,0 +1,9 @@
+CHANGELOG
+
+0.1.1
+	* now the list gets sorted immidiatly
+	* the curses ui now reacts better if you resize the terminal
+	* codebase refactored
+	* lists have now the last 9 items
+0.1.0
+	* basic version of yt_curses with ability to choose from 5 channels/searches

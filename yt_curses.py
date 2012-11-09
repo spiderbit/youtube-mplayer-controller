@@ -1,1 +1,1 @@
-yt_curses
+bin/yt_curses

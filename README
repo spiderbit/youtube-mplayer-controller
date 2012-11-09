@@ -2,9 +2,11 @@
 ytmpc
 =====
 
-(youtube mplayer controller) * just a temporary name
+Youtube MPlayer Controller
 
-ytmpc is a tool for the command line that creates playlists to play with mplayer.
+ytmpc is a set of tools to manage youtube searches/channels you want to watch and opens them in (S)Mplayer
+
+At the moment the tools that are included in this package are: "ytmpc" and "yt_curses"
 
 License
 =======
@@ -13,33 +15,23 @@ ytmpc is free software and licensed under the GNU GPLv3 or later. You
 are welcome to change and redistribute it under certain conditions. For more
 information see the COPYING file or visit http://www.gnu.org/licenses/gpl-3.0.html
 
-
-Requirements:
---------------
-SMPlayer
-Python 2.6+
-python-elixir
-python-sqlite
-python-configobj
-
 yt_curses
 ---------
 
 The main tool now is yt_curses (a curses-wrapper around of ytmpc)
 
-Its inspired by minitube, but has a quick console curces gui, it starts the videos from the oldest to the newest in the choosen time-span. So you dont have to rearange a playlist like in minitube to get multipart videos run in the right direction. Additionaly another point why I wrote it, if not the most important one, is that it uses mplayer instead of gstreamer. On machines like some of mine (amd zacate) that makes 1 to 1.5 cores busy if you watch it in 720p, and browsing and other multitasking tasks slow down badly. with ytmpc/mplayer it only keeps here 0.5-0.7 cores buys.
+Its inspired by minitube, but has a quick console curces gui, it starts the videos from the oldest to the newest in the choosen time-span. So you dont have to rearange a playlist like in minitube to get multipart videos run in the right direction. Additionaly another point why I wrote it, if not the most important one, is that it uses mplayer instead of gstreamer. On machines like some of mine (amd zacate) that makes 1 to 1.5 cores busy if you watch it in 720p, and browsing and other multitasking tasks slow down badly. with ytmpc/mplayer it only keeps here 0.5-0.7 cores busy.
 
-if you like it and want to give me suggestions what I should make better or anything else feel free to write me a email to s.huchler@gmail.com
+if you like it and want to give me suggestions what I should make better or anything else, feel free to write me a email to s.huchler@gmail.com
 
-yust start it with:
+Just start it with:
 
 > ./yt_curses
 
-its pretty much self explainible, just press the buttons, start with select if you want to add a youtube channel or normal search, with the buttons c for channel or s for search and press a for adding/starting your search.
+its pretty much self explainable, just press the key that you see in front of the function you want:
 
-INSTALL
-
-Copy or link yt_curses AND ytmpc to a directory which is in your path
+With the keys [c] and [s] you can switch the stream mode s for a normal youtube search and c for channel.
+Then press [n] for new, to add a new search/channel. Now your most recent Searches gets listed and you can, start them again with the numbers in front of it.
 
 ------------------------------------------------------------------------
 
@@ -92,6 +84,32 @@ hope that can be used for piping playlists to other players
 
 ./ytmpc playlist 'ukf drum and bass' relevance 2 month > /tmp/ytmpc.m3u; totem /tmp/ytmpc.m3u
 Creates a temporary playlist and opens it with totem
+
+
+INSTALL
+=======
+
+Either clone the git tree and then with root-privileges call:
+
+> python setup.py install
+
+
+Or with Pip:
+
+> pip install ytmpc
+
+
+***
+(don't forget to install SMPlayer with apt/yum or whatever tools your distribution gives you,
+			 because SMPlayer is not in pypi so pip cannot install that dependency)
+***
+
+Requirements:
+=============
+
+SMPlayer
+Python 2.7+
+python-gdata
 
 Enjoy!
 

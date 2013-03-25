@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+
 
 import sys
 import random
@@ -12,6 +15,10 @@ import gdata.youtube.service
 #from ytdl import ytdl
 #from ytstr import ytstr
 # https://bitbucket.org/rg3/youtube-dl/wiki/Home
+
+import re
+
+
 
 
 class YoutubeClient:
@@ -48,26 +55,104 @@ class YoutubeClient:
 		self.client = gdata.youtube.service.YouTubeService()
 		self.pre_execute()
 
+	def possible_multipart_name(self, text):
+		"""
 
-	def get_playlist(self, feed, pl_format='file'):
-		urls = []
-		lines = []
-		lines.append('#EXTM3U\n')
-		lines.append("# Playlist created by youtube_mplayer_controller\n")
-		for entry in feed.entry:
-			url = str(entry.media.player.url)
-			urls.append(url)
-			lines.append('#EXTINF:0,%s\n%s\n'%(entry.title.text,url))
-		lines.append(urls[0])
+        Arguments:
+        - `text`:
+        """
+		pattern1 = '(\D*)(\d{1})(.*)'
+		match1 = re.search(pattern1, text)
+		return match1
+
+
+	def get_similar_entries(self, match, entries, entry):
+		"""
+
+        Arguments:
+        - `match`:
+		- `entries`:
+		- `entry`:
+        """
+		similar_entries = dict()
+		found_part_number = match.groups()[1]
+		similar_entries[found_part_number] = entry
+		pattern = "(%s)(\d{1})" % (
+			re.escape(match.groups()[0])
+#			re.escape(match.groups()[2])
+		)
+		for entry2 in entries:
+			if not entry2 == entry:
+				similar = re.search(pattern, entry2.title.text)
+				if similar != None:
+					x = similar.groups()
+#					assert similar.groups()[1] == '2', x
+					similar_entries[similar.groups()[1]] = entry2
+		return similar_entries
+
+
+	def sort_entries(self, entries):
+			"""
+            Arguments:
+            - `entries`:
+            """
+			sorted_entries = []
+			for entry in entries:
+				url = entry.media.player.url
+				text = entry.title.text
+				if entry in sorted_entries:
+					continue
+				match = self.possible_multipart_name(text)
+				similar = None
+				if match:
+					similar_entries = self.get_similar_entries(
+						match, entries, entry)
+					keys = similar_entries.keys()
+#					assert False, keys
+					keys.sort()
+
+					if keys:
+						for key in keys:
+					#		print similar_entries[key].title.text+"\n"
+							sorted_entries.append(similar_entries[key])
+#					assert False, similar_entries
+				else:
+					#print "else"
+					sorted_entries.append(entry)
+			return sorted_entries
+
+
+	def get_playlist(self, feed, pl_format='file', multipart_sort=False):
+
 		if pl_format == 'file':
+			lines = []
+			lines.append('#EXTM3U\n')
+			lines.append("# Playlist created by youtube_mplayer_controller\n")
+		elif pl_format == 'urllist':
+			urls = []
+
+		if multipart_sort:
+			entries = self.sort_entries(feed.entry)
+		else:
+			entries = feed.entry
+
+		for entry in entries:
+			url = str(entry.media.player.url)
+			if pl_format == 'file':
+				lines.append('#EXTINF:0,%s\n%s\n'%(entry.title.text,url))
+			elif pl_format == 'urllist':
+				urls.append(url)
+
+		if pl_format == 'file':
+			lines.append(feed.entry[0].media.player.url)
 			return lines
 		elif pl_format == 'urllist':
 			return urls
 
 	def playlist(self,feed):
-		lines = self.get_playlist(feed)
-		for line in lines:
-			print line
+		urls = self.get_playlist(feed)#, 'urllist')
+		for url in urls:
+			print url
 
 
 	def search(self,feed):
@@ -150,3 +235,20 @@ class YoutubeClient:
 				self.stream(feed)
 		if command == 'search':	self.search(feed)
 		if command == 'playlist': self.playlist(feed)
+
+if __name__ == '__main__':
+	yt = None
+
+	if len(sys.argv) == 7:
+		yt = YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+	if len(sys.argv) == 6:
+		if sys.argv[5] == 'shuffle':
+			yt = YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], None)
+		elif sys.argv[5] == 'reverse':
+			yt = YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], None)
+		else:
+			yt = YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], None, sys.argv[5])
+	if len(sys.argv) == 5:
+		yt = YoutubeClient(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+	if yt != None:
+		yt.execute()

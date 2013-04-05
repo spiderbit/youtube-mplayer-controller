@@ -1,1 +1,0 @@
-bin/yt_curses

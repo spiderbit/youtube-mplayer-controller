@@ -1,1 +1,212 @@
-bin/yt_curses
+#!/usr/bin/env python2
+#-*- coding:utf-8 -*-
+
+import subprocess
+from os import system
+import curses
+from configobj import ConfigObj
+import os
+import user
+from ytplay.ytplayer import YoutubeClient
+import quvi
+
+def define_block(screen,name="unnamed", lines={'1':'x'}, \
+					 x_offset=0, y_offset=0, selected=None, align='h'):
+	"""sets a block
+	- align can be: h for horizontal / v for vertical
+	"""
+
+	screen.addstr(y_offset, x_offset, "========%s========"%name.upper())
+	x_pos = x_offset
+	distance = 2
+
+	for k in lines:
+		if k == selected: elem = "<%s>"%lines[k]
+		else: elem = lines[k]
+		if align == 'h':
+			y_pos = y_offset + 1 + lines.keys().index(k)
+			output =  "- [%s] %s" % (k, elem)
+			screen.addstr(y_pos, x_pos, output)
+		elif align == 'v':
+			y_pos = y_offset + 1
+			output = "[%s] %s |" % (k, elem)
+			screen.addstr(y_pos, x_pos, output)
+			x_pos += len(output) + distance
+
+
+def get_choice_dict(choices, start=1):
+	"""Returns a dict with numbers pointing to the choices
+
+	Arguments:
+	- `choices`: which choices you have
+	- `start`: which index to start with
+	"""
+	choice_map = {}
+
+	max_hits_visible = 9
+	for choice in choices:
+		if choices.index(choice) < max_hits_visible:
+			choice_map[choices.index(choice)+start] = choice
+
+	return choice_map
+
+def ask_search_string(screen, edit_list):
+	"""Asks a the user to input a string and adds it to the list
+
+	Arguments:
+	- `screen`: ncurses screen element
+	- `edit_list`: list to add the input
+	"""
+	cur_y, cur_x = screen.getmaxyx()
+	screen.addstr(cur_y-3, 15, "SEARCH STRING: ")
+	screen.refresh()
+	search = screen.getstr()
+	if search in edit_list:
+		edit_list.remove(search)
+	edit_list.insert(0, search)
+	return edit_list
+
+
+class YTCurses(object):
+	"""Courses youtube client
+	"""
+
+	def __init__(self, screen):
+		"""
+
+		Arguments:
+		- `screen`:
+		"""
+		self._screen = screen
+		self.channels_lst = []
+		self.terms_lst = []
+		self.read_settings()
+		self.time_frames = {'t' : "today",'w' : "week",'m' : "month"}
+		self.modes  = {'c' : "channel",'s' : "search"}
+		self.selected_time = 't'
+		self.selected_mode = 's'
+		self.x_offset_left = 4
+		self.x_offset_2 = 40
+
+
+	def read_settings(self):
+		"""Reads settings from config file or create one with default settings
+		"""
+		app_name = 'ytmpc'
+		config_path = os.path.join(user.home, '.config', app_name)
+		if not os.access(config_path, os.F_OK):
+			os.mkdir(config_path)
+		config = ConfigObj()
+		config.filename = os.path.join(config_path, 'config')
+
+		if not os.access(os.path.join(config_path, 'config'), os.F_OK):
+			self.write_settings()
+		else:
+			config = ConfigObj(os.path.join(config_path, 'config'))
+			self.channels_lst = config['history']['channels']
+			self.terms_lst = config['history']['terms']
+
+	def write_settings(self):
+		"""Writes search history to config file
+		"""
+		app_name = 'ytmpc'
+		config_path = os.path.join(user.home, '.config', app_name)
+		config = ConfigObj()
+		config.filename = os.path.join(config_path, 'config')
+		config['history']={}
+		config['history']['channels'] = self.channels_lst
+		config['history']['terms'] = self.terms_lst
+		config.write()
+
+	def show_client(self, x):
+
+		search = ""
+		screen = self._screen
+		screen.refresh()
+		screen.border(0)
+
+		self.channels = get_choice_dict(self.channels_lst)
+		self.terms = get_choice_dict(self.terms_lst)
+		define_block(screen, "Time span", self.time_frames, \
+					 self.x_offset_left, 1, self.selected_time, 'v')
+		define_block(screen, "Stream type", self.modes, \
+					 self.x_offset_left, 3, self.selected_mode, 'v')
+		define_block(screen, "Channels", self.channels, self.x_offset_left, 6)
+		define_block(screen, "Search terms", self.terms, self.x_offset_2, 6)
+
+		cur_y, cur_x = screen.getmaxyx()
+		screen.addstr(cur_y-8, self.x_offset_left, "- [q] Quit")
+		screen.addstr(cur_y-7, self.x_offset_left, "- [n] New Search/Channel")
+		screen.addstr(cur_y-6, self.x_offset_left, "What do you want to do? ")
+
+		screen.refresh()
+
+		try:
+			x = screen.getkey()
+		except Exception:
+			return
+		if x in self.time_frames.keys():
+			self.selected_time = x
+			search = ""
+		elif x == 'n':
+			if self.selected_mode == 'c':
+				self.channels_lst = ask_search_string(screen, self.channels_lst)
+				self.channels = get_choice_dict(self.channels_lst, 1)
+				search = 'u_%s'%self.channels_lst[0]
+			elif self.selected_mode == 's':
+				self.terms_lst = ask_search_string(screen, self.terms_lst)
+				self.terms = get_choice_dict(self.terms_lst, 1)
+				search = self.terms_lst[0]
+		elif x == 'c':
+			self.selected_mode ='c'
+		elif x == 's':
+			self.selected_mode ='s'
+		elif self.selected_mode == 'c' and x.isdigit() \
+			 and int(x) in self.channels.keys():
+			channel = self.channels[int(x)]
+			search = 'u_%s'%channel
+			self.channels_lst.remove(channel)
+			self.channels_lst.insert(0,channel)
+		elif self.selected_mode == 's' and x.isdigit() \
+			 and int(x) in self.terms.keys():
+			search = self.terms[int(x)]
+			self.terms_lst.remove(search)
+			self.terms_lst.insert(0,search)
+		else: search = ""
+		screen.refresh()
+		if search != "":
+			yc = YoutubeClient('stream', search, 'published', '-1', \
+							   'reverse', self.time_frames[self.selected_time])
+			yc.execute()
+			search = ""
+			self.write_settings()
+
+		return x
+
+
+def start():
+	"""starts the curses ui
+	"""
+
+	x = 0
+
+	min_y=25
+	min_x=60
+	screen = curses.initscr()
+	ytc = YTCurses(screen)
+
+	while x != 'q':
+		screen.clear()
+		cur_y, cur_x = screen.getmaxyx()
+
+		if cur_x < min_x or cur_y < min_y:
+			screen.addstr(1, 1, \
+						  "Error: console is to small!")
+			screen.refresh()
+		else:
+			x = ytc.show_client(x)
+			screen.refresh()
+	curses.endwin()
+
+if __name__ == '__main__':
+	start()

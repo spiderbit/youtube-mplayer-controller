@@ -5,7 +5,7 @@ from os import environ as env
 import tempfile
 import shutil
 import os
-from ConfigParser import SafeConfigParser
+#from ConfigParser import SafeConfigParser
 import sys
 import subprocess
 from subprocess import PIPE, Popen, call

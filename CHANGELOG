@@ -1,5 +1,7 @@
 CHANGELOG
 
+next
+	* fixes for user based searches
 0.1.1
 	* now the list gets sorted immidiatly
 	* the curses ui now reacts better if you resize the terminal

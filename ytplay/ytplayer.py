@@ -1,6 +1,10 @@
-
 import sys
 import random
+import feedparser
+import time
+from time import mktime
+from datetime import datetime, timedelta
+
 
 # from youtube_player import YoutubePlayer
 # my player, uses urwid and vlc ^^
@@ -37,8 +41,18 @@ class YoutubeClient:
 			self.mode = mode
 		else: self.mode = False
 
-		times_key = {'today':'today','week':'this_week',\
+		times_key_search = {'today':'today','week':'this_week',\
 						 'month':'this_month','time':'all_time'}
+
+		times_key_user = {'today':1,'week':7,\
+						 'month':30,'time':None}
+
+
+		if q.startswith('u_'):
+				times_key = times_key_user
+		else:
+				times_key = times_key_search
+
 		times = ['today', 'week', 'month', 'time']
 		if time is not None and time in times:
 			self.time = times_key[time]
@@ -118,25 +132,43 @@ class YoutubeClient:
 		subprocess.check_call(["smplayer", self.temp_file.name])
 		self.remove_temp_file()
 
-	def pre_execute(self):
 
-		query = gdata.youtube.service.YouTubeVideoQuery()
+	def filter_time(self, feed):
+		if None == self.time:
+			return feed
+		x = len(feed.entry)
+		remove_list = []
+
+		for entry in feed.entry:
+			d = feedparser.parse(entry.published.ToString())
+			feed_time = d['feed']['published_parsed']
+			dt = datetime.fromtimestamp(time.mktime(feed_time))
+			if (datetime.now() - dt) > timedelta (days = self.time):
+				remove_list.append(entry)
+		for item in remove_list:
+			feed.entry.remove(item)
+		return feed
+
+	def pre_execute(self):
 		if self.q.startswith('u_'):
-			query.author = self.q[2:]
+			feed = self.client.GetYouTubeUserFeed(username=self.q[2:])
+			feed = self.filter_time(feed)
 		else:
+			query = gdata.youtube.service.YouTubeVideoQuery()
 			query.vq = self.q
-		query.format = '5'
-		query.hd = True
-		if self.num != -1:
-			query.max_results = self.num
-		query.start_index = 1
-		query.racy = 'exclude'
-		query.orderby = self.order
-		if self.time: query.time = self.time
-		feed = self.client.YouTubeQuery(query)
+			query.format = '5'
+			query.hd = True
+			if self.num != -1:
+				query.max_results = self.num
+			query.start_index = 1
+			query.racy = 'exclude'
+			if self.time: query.time = self.time
+			feed = self.client.YouTubeQuery(query)
+
 		if self.mode == 'shuffle': random.shuffle(feed.entry)
 		elif self.mode == 'reverse': feed.entry.reverse()
 		self.feed = feed
+
 
 	def execute(self):
 		feed = self.feed

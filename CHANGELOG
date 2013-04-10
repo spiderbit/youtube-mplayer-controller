@@ -1,6 +1,7 @@
 CHANGELOG
 
 next
+	* ytc ignore now empty searches
 	* adds all_time_search option
 	* fixes for user based searches
 0.1.1

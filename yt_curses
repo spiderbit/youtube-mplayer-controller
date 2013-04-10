@@ -63,7 +63,8 @@ def ask_search_string(screen, edit_list):
 	search = screen.getstr()
 	if search in edit_list:
 		edit_list.remove(search)
-	edit_list.insert(0, search)
+	if search != "":
+		edit_list.insert(0, search)
 	return edit_list
 
 

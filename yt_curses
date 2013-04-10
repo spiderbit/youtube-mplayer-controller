@@ -81,7 +81,7 @@ class YTCurses(object):
 		self.channels_lst = []
 		self.terms_lst = []
 		self.read_settings()
-		self.time_frames = {'t' : "today",'w' : "week",'m' : "month"}
+		self.time_frames = {'t' : "today",'w' : "week",'m' : "month", 'a':"all_time"}
 		self.modes  = {'c' : "channel",'s' : "search"}
 		self.selected_time = 't'
 		self.selected_mode = 's'

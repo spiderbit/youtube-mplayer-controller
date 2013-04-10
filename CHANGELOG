@@ -1,6 +1,7 @@
 CHANGELOG
 
 next
+	* adds all_time_search option
 	* fixes for user based searches
 0.1.1
 	* now the list gets sorted immidiatly

@@ -20,7 +20,7 @@ import gdata.youtube.service
 
 class YoutubeClient:
 
-	def __init__(self,keyword,q,order,num_results,mode=None,time=None):
+	def __init__(self,keyword,q,order,num_results,mode=None,time='all_time'):
 
 		keywords = ['search', 'download', 'stream', 'playlist']
 		if keyword in keywords: self.keyword = keyword
@@ -42,18 +42,18 @@ class YoutubeClient:
 		else: self.mode = False
 
 		times_key_search = {'today':'today','week':'this_week',\
-						 'month':'this_month','time':'all_time'}
+						 'month':'this_month','all_time':'all_time'}
 
 		times_key_user = {'today':1,'week':7,\
-						 'month':30,'time':None}
-
+						 'month':30,'all_time':None}
 
 		if q.startswith('u_'):
 				times_key = times_key_user
 		else:
 				times_key = times_key_search
 
-		times = ['today', 'week', 'month', 'time']
+		times = ['today', 'week', 'month', 'all_time']
+
 		if time is not None and time in times:
 			self.time = times_key[time]
 		else:
@@ -164,7 +164,6 @@ class YoutubeClient:
 			query.racy = 'exclude'
 			if self.time: query.time = self.time
 			feed = self.client.YouTubeQuery(query)
-
 		if self.mode == 'shuffle': random.shuffle(feed.entry)
 		elif self.mode == 'reverse': feed.entry.reverse()
 		self.feed = feed

@@ -1,6 +1,7 @@
 CHANGELOG
 
 next
+	* adds option to delete channels/searches
 	* ytc ignore now empty searches
 	* adds all_time_search option
 	* fixes for user based searches
